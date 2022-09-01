@@ -6,11 +6,15 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/gookit/color"
+	"github.com/inancgumus/screen"
 )
 
 const dimension = 3
 
 var gameBoard [dimension][dimension]Symbol
+var player1, player2 string
 
 type Symbol int
 
@@ -31,23 +35,23 @@ func init() {
 
 // Display board status
 func displayBoard() {
-	fmt.Println("    a  b  c ")
+	color.Yellowln("    a  b  c ")
 	for i := range gameBoard {
-		fmt.Printf("%d [", i)
+		color.Yellow.Printf("%d [", i)
 		for j := range gameBoard[i] {
 			switch gameBoard[i][j] {
 			case 0:
 				fmt.Print("   ")
 			case 1:
-				fmt.Print(" X ")
+				color.Redp(" X ")
 			case 2:
-				fmt.Print(" O ")
+				color.Greenp(" O ")
 			}
 
 		}
-		fmt.Printf("] %d \n", i)
+		color.Yellow.Printf("] %d \n", i)
 	}
-	fmt.Println("    a  b  c ")
+	color.Yellowln("    a  b  c ")
 }
 
 // input validation
@@ -99,26 +103,31 @@ func isASpace(line [dimension]Symbol) bool {
 // Test if winning condition
 func isWin(board [dimension][dimension]Symbol) (bool, string) {
 
+	space := false
 	for j := 0; j < dimension; j++ {
 
 		craftLine := [dimension]Symbol{board[0][j], board[1][j], board[2][j]}
 
 		if !isASpace(craftLine) {
 			if countLines(craftLine) == 6 {
-				return true, "Player 1"
+				return true, player1
 			} else if countLines(craftLine) == 3 {
-				return true, "Player 2"
+				return true, player2
 			}
+		} else {
+			space = true
 		}
 	}
 
 	for j := range board {
 		if !isASpace(board[j]) {
 			if countLines(board[j]) == 6 {
-				return true, "Player 1"
+				return true, player1
 			} else if countLines(board[j]) == 3 {
-				return true, "Player 2"
+				return true, player2
 			}
+		} else {
+			space = true
 		}
 	}
 
@@ -127,37 +136,53 @@ func isWin(board [dimension][dimension]Symbol) (bool, string) {
 
 	if !isASpace(diag1) {
 		if countLines(diag1) == 6 {
-			return true, "Player 1"
+			return true, player1
 		} else if countLines(diag1) == 3 {
-			return true, "Player 2"
+			return true, player2
 		}
+	} else {
+		space = true
 	}
 
 	if !isASpace(diag2) {
 		if countLines(diag2) == 6 {
-			return true, "Player 1"
+			return true, player1
 		} else if countLines(diag2) == 3 {
-			return true, "Player 2"
+			return true, player2
 		}
+	} else {
+		space = true
 	}
 
+	if !space {
+		return true, "No winner !"
+	}
 	return false, ""
 }
 
 func main() {
-	var text string
+	var coords string
 
 	firstPlayerTurn := true
 
+	screen.Clear()
+
+	color.Redp("Player1 (O) name: ")
+	fmt.Scanf("%s\n", &player1)
+
+	color.Greenp("Player2 (X) name: ")
+	fmt.Scanf("%s\n", &player2)
+
+	screen.Clear()
 	displayBoard()
 
 	for {
 
 		if firstPlayerTurn {
-			fmt.Print("Player1 turn ")
-			fmt.Scanf("%s\n", &text)
+			color.Red.Printf("%s turn ", player1)
+			fmt.Scanf("%s\n", &coords)
 
-			x, y, err := validateCoords(text)
+			x, y, err := validateCoords(coords)
 
 			if err != nil {
 				fmt.Println("Error: ", err)
@@ -167,10 +192,10 @@ func main() {
 			}
 
 		} else {
-			fmt.Print("Player2 turn ")
-			fmt.Scanf("%s\n", &text)
+			color.Green.Printf("%s turn ", player2)
+			fmt.Scanf("%s\n", &coords)
 
-			x, y, err := validateCoords(text)
+			x, y, err := validateCoords(coords)
 
 			if err != nil {
 				fmt.Println("Error: ", err)
@@ -180,10 +205,11 @@ func main() {
 			}
 		}
 
+		screen.Clear()
 		displayBoard()
 		win, player := isWin(gameBoard)
 		if win {
-			fmt.Println("Game over, the winner is : ", player)
+			color.Yellowln("Game over, the winner is : ", player)
 			os.Exit(0)
 		}
 
